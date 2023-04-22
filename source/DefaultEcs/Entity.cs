@@ -69,6 +69,15 @@ namespace DefaultEcs
         #endregion
 
         #region Methods
+        /**
+         * Return the actual entity ID.
+         * Somebody will hate this, however we need that for debugging.
+         */
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetId()
+        {
+            return EntityId;
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowIf(bool actuallyThrow, string message)

@@ -269,6 +269,19 @@ namespace DefaultEcs
             return new Entity(WorldId, entityId);
         }
 
+        public Entity FindEntity(int entityId)
+        {
+            if (entityId >= MaxCapacity)
+            {
+                throw new InvalidOperationException($"Requested entity id {entityId} is too large.");
+            }
+
+            /*
+             * Please note, that this entity may or may not live.
+             */
+            return new Entity(WorldId, entityId);
+        }
+
         /// <summary>
         /// Sets up the current <see cref="World"/> to handle component of type <typeparamref name="T"/> with a different maximum count than <see cref="MaxCapacity"/>.
         /// If the actual number of component is already superior to the passed value, does nothing.

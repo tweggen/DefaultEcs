@@ -13,7 +13,7 @@ namespace DefaultEcs.Internal
         private static ComponentPool<T>[] _previousPools;
 
         public static readonly ComponentFlag Flag;
-
+    
         public static ComponentPool<T>[] Pools;
 
         #endregion
