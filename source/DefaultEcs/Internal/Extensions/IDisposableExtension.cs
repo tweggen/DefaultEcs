@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace System
 {
-    internal static class IDisposableExtension
+    public static class IDisposableExtension
     {
         #region Types
 
