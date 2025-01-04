@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using DefaultEcs.Internal;
 using DefaultEcs.Internal.Diagnostics;
 using DefaultEcs.Internal.Messages;
@@ -17,6 +18,8 @@ namespace DefaultEcs
     [StructLayout(LayoutKind.Explicit)]
     public readonly struct Entity : IDisposable, IEquatable<Entity>
     {
+        public static Thread OkThread = null;
+        
         #region Fields
 
         [FieldOffset(0)]
@@ -88,6 +91,17 @@ namespace DefaultEcs
             }
         }
 
+        [Conditional("DEBUG")] private static void DebugIf(bool actuallyThrow, string message)
+        {
+            if (actuallyThrow)
+            {
+                string strTrace = new StackTrace().ToString();
+                Debug.WriteLine(strTrace);
+                Console.WriteLine(strTrace);
+                throw new InvalidOperationException(message);
+            }
+        }
+
         private void InnerSet<T>(bool isNew)
         {
             ref ComponentEnum components = ref Components;
@@ -125,6 +139,7 @@ namespace DefaultEcs
         public void Enable()
         {
             ThrowIf(WorldId == 0, "Entity was not created from a World");
+            DebugIf(OkThread != null && OkThread != Thread.CurrentThread, "Enable was called from non-ok thread.");
 
             ref ComponentEnum components = ref Components;
             if (!components[World.IsEnabledFlag])
@@ -142,6 +157,7 @@ namespace DefaultEcs
         public void Disable()
         {
             ThrowIf(WorldId == 0, "Entity was not created from a World");
+            DebugIf(OkThread != null && OkThread != Thread.CurrentThread, "Disable was called from non-ok thread.");
 
             ref ComponentEnum components = ref Components;
             if (components[World.IsEnabledFlag])
@@ -191,6 +207,7 @@ namespace DefaultEcs
         public void Disable<T>()
         {
             ThrowIf(WorldId == 0, "Entity was not created from a World");
+            DebugIf(OkThread != null && OkThread != Thread.CurrentThread, "Enable was called from non-ok thread.");
 
             ref ComponentEnum components = ref Components;
             if (components[ComponentManager<T>.Flag])
@@ -211,6 +228,7 @@ namespace DefaultEcs
         public void Set<T>(in T component)
         {
             ThrowIf(WorldId == 0, "Entity was not created from a World");
+            DebugIf(OkThread != null && OkThread != Thread.CurrentThread, "Set<> was called from non-ok thread.");
 
             InnerSet<T>(ComponentManager<T>.GetOrCreate(WorldId).Set(EntityId, component));
         }
@@ -268,6 +286,7 @@ namespace DefaultEcs
         /// <typeparam name="T">The type of the component.</typeparam>
         public void Remove<T>()
         {
+            DebugIf(OkThread != null && OkThread != Thread.CurrentThread, "Remove<> was called from non-ok thread.");
             if (ComponentManager<T>.Get(WorldId)?.Remove(EntityId) == true)
             {
                 ref ComponentEnum components = ref Components;
@@ -379,6 +398,7 @@ namespace DefaultEcs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
+            DebugIf(OkThread != null && OkThread != Thread.CurrentThread, "Dispose was called from non-ok thread.");
             Publisher.Publish(WorldId, new EntityDisposingMessage(EntityId));
             Publisher.Publish(WorldId, new EntityDisposedMessage(EntityId));
         }
